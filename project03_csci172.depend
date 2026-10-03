@@ -1,5 +1,5 @@
 # depslib dependency file v1.0
-1790921744 source:c:\users\nathan jack luna\desktop\cs172\project03_csci172\main.cpp
+1790926455 source:c:\users\nathan jack luna\desktop\cs172\project03_csci172\main.cpp
 	<string.h>
 	<GLUT/glut.h>
 	<GL/glut.h>
@@ -12,4 +12,12 @@
 	<stdlib.h>
 	<GL/gl.h>
 	<GL/glu.h>
+
+1790999653 source:c:\users\nathan jack luna\desktop\cs172\project03-csci172-repo\main.cpp
+	<string.h>
+	<GLUT/glut.h>
+	<GL/glut.h>
+	<stdlib.h>
+	<iostream>
+	<math.h>
 

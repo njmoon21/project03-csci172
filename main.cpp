@@ -1,3 +1,9 @@
+/*
+    Name: Nathan Jack Luna
+    ID: 302029118
+    Class: CSCI 172
+    Project: project03_csci172
+*/
 
 #include <string.h>
 
@@ -26,46 +32,65 @@ const GLfloat mat_diffuse[]    = { 0.8f, 0.8f, 0.8f, 1.0f };
 const GLfloat mat_specular[]   = { 1.0f, 1.0f, 1.0f, 1.0f };
 const GLfloat high_shininess[] = { 100.0f };
 
-// Global variables for multiple functions to access each planets' variables
-float planetB_x;
-float planetB_z;
-float planetC_x;
-float planetC_z;
-float planetD_x;
-float planetD_z;
+// Global variables for multiple functions to access each planets' variables,
+// showing rings, starting simulation, etc.
 
+// Initializing each planet's X and Z values
+float planetB_x; float planetB_z;
+float planetC_x; float planetC_z;
+float planetD_x; float planetD_z;
+
+// Assigning a radius to each planet (determining their size)
 float planetA_radius = 1.0f;
 float planetB_radius = 0.25f;
 float planetC_radius = 0.35f;
 float planetD_radius = 0.15f;
 
+// These planets' angles will increment every iteration
 float planetB_angle = 0.0f;
 float planetC_angle = 0.0f;
 float planetD_angle = 0.0f;
 
+// Used to draw the orbit lines, as well as calculate along with
+// the planet angles to update their x and z values
 float planetB_orbit_radius = 3.4f;
 float planetC_orbit_radius = 5.5f;
 float planetD_orbit_radius = 1.2f;
 
+// Initialized to set their rotation speed (Days)
+float planetB_rotation = 0.0f;
+float planetC_rotation = 0.0f;
+
+// Variables to toggle on and off to control the simulation
+bool simulationStart = false;
+bool showOrbitRings = true;
+float scale = 1.0f;
+float rotation = 0.0f;
+
 /* GLUT callback Handlers */
 
-// Function to create the orbit lines for planets B and C
+
+// Created custom function to create the orbit lines for planets B and C
 void drawOrbitLine(float radius, float planet_x, float planet_z)
 {
-    glColor3f(2.0f, 2.0f, 2.0f);
-    glLineWidth(1.5f);
+    glColor3f(1.0f, 1.0f, 1.0f);
+    glLineWidth(1.25f);
 
-    glBegin(GL_LINE_LOOP);
-    for (int i = 0; i < 100; i++)
-    {
-        float rad = 2 * 3.1415926f / 100 * i;
-        float planet_x = radius * cosf(rad);
-        float planet_z = radius * sinf(rad);
-        glVertex3f(planet_x, 0.0, planet_z);
+    if(showOrbitRings){ // The lines will only be drawn if showOrbitRings is true
+        glBegin(GL_LINE_LOOP);
+            for (int i = 0; i < 100; i++)
+            {
+                // Each of these lines are responsible for plotting the circular line at
+                // a certain position (y value always being at 0 unless we start rotating it)
+                float rad = 2 * 3.1415926f / 100 * i;
+                float planet_x = radius * cosf(rad);
+                float planet_z = radius * sinf(rad);
+                glVertex3f(planet_x, 0.0, planet_z);
+            }
+        glEnd();
     }
-
-    glEnd();
 }
+
 
 static void resize(int width, int height)
 {
@@ -90,16 +115,36 @@ static void display(void)
     glMatrixMode(GL_MODELVIEW);
     glLoadIdentity();
 
-    gluLookAt(0,5,10,0.0,0.0,0.0,0.0,1.0,0.0);
+    // I can use this to change the camera position
+    gluLookAt(0, 6, 11, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0);
+
 
     if(WireFrame)
 		glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);		//Draw Our Mesh In Wireframe Mesh
 	else
 		glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);		//Toggle WIRE FRAME
 
-    // your code here
 
-    // The planets' x and z values are constantly being calculated while planet_angle is incrementing
+
+    if(simulationStart) // The angles/rotation will only be calculated when simulationStart is true
+    {
+        // These are basically the values that make up how long each YEAR is for one revolution around the Sun.
+        // Each planet will basically have their own length of a year and day.
+
+        // I searched up that mercury orbits around the Sun significantly faster than Earth
+        planetB_angle += 0.01f;
+        // Planet C's orbit is slower than Planet B's
+        planetC_angle += 0.005f;
+        planetD_angle += 0.02f;
+
+        // Gave planets their own rotation, some planets have faster/slower DAYS than others
+        planetB_rotation += 0.25f;
+        planetC_rotation += 0.5f;
+    }
+
+
+    // All planets' x and z values are constantly being calculated
+    // while planet_angle is changing every iteration
     planetB_x = planetB_orbit_radius * cosf(planetB_angle);
     planetB_z = planetB_orbit_radius * sinf(planetB_angle);
 
@@ -109,40 +154,48 @@ static void display(void)
     planetD_x = planetD_orbit_radius * cosf(planetD_angle);
     planetD_z = planetD_orbit_radius * sinf(planetD_angle);
 
-    // I searched up that mercury orbits around the Sun significantly faster than Earth
-    planetB_angle += 0.01f;
-    // Planet C's orbit is slower than Planet B's
-    planetC_angle += 0.005f;
-    planetD_angle += 0.02f;
+
+
+    // This allows me to rotation around the y-axis (0, 1, 0),
+    // changing the rotation value with the LEFT/RIGHT arrows
+    glRotatef(rotation, 0, 1, 0);
+
+    // This allows me to zoom in and out of the scene, changing the scale value with the UP/DOWN arrows
+    glScalef(scale, scale, scale);
+
 
     // Planet A ; Sun
     glPushMatrix();
         // Choose these RGB values to be yellow-orange
         glColor3f(3.0f, 1.0f, 0.25f);
-        glutSolidSphere(planetA_radius, 30, 30);
+        glutSolidSphere(planetA_radius, 20, 20);
 
         // Planet B
-        drawOrbitLine(planetB_orbit_radius, planetB_x, planetB_z);
+        drawOrbitLine(planetB_orbit_radius, planetB_x, planetB_z); // Orbit line for Planet B
         glPushMatrix();
             glColor3f(0.55f, 0.2f, 0.01f);
             glTranslatef(planetB_x, 0.0f, planetB_z);
-            glutSolidSphere(planetB_radius, 20, 20);
+            glRotatef(planetB_rotation, 0.0f, 1.0f, 0.0f);
+            glutSolidSphere(planetB_radius, 10, 10);
         glPopMatrix();
 
 
         // Planet C
-        drawOrbitLine(planetC_orbit_radius, planetC_x, planetC_z);
+        drawOrbitLine(planetC_orbit_radius, planetC_x, planetC_z); // Orbit line for Planet C
         glPushMatrix();
             glColor3f(0.3f, 0.5f, 1.0f);
             glTranslatef(planetC_x, 0.0f, planetC_z);
-            glutSolidSphere(planetC_radius, 20, 20);
+            glRotatef(planetC_rotation, 0.0f, 1.0f, 0.0f);
+            // I slightly tilted Planet C's axis, just like earth, it's axis is slightly tilted
+            glRotatef(25.0f, 0, 0, 1);
+            glutSolidSphere(planetC_radius, 10, 10);
 
-            drawOrbitLine(planetD_orbit_radius, planetC_x, planetC_z);
+            drawOrbitLine(planetD_orbit_radius, planetC_x, planetC_z); // Orbit line for Planet D (Moon)
             // Planet D
             glPushMatrix();
                 glColor3f(1.0f, 1.0f, 0.9f);
                 glTranslatef(planetD_x, 0.0f, planetD_z);
-                glutSolidSphere(planetD_radius, 20, 20);
+                glutSolidSphere(planetD_radius, 10, 10);
             glPopMatrix();
     glPopMatrix();
 
@@ -157,6 +210,15 @@ static void key(unsigned char key, int x, int y)
         case 'q':
             exit(0);
             break;
+        case ' ': // toggle pause/play simulation
+            simulationStart = !simulationStart;
+            break;
+        case 'r': //  toggle on/off the orbit rings
+            showOrbitRings = !showOrbitRings;
+            break;
+        case 'w': // toggle on/off the wire frame for all objects
+            WireFrame = !WireFrame;
+            break;
     }
 }
 
@@ -164,8 +226,18 @@ void Specialkeys(int key, int x, int y)
 {
     switch(key)
     {
-    case GLUT_KEY_UP:
-    break;
+        case GLUT_KEY_UP: // zooms into the scene
+            scale += 0.06f;
+            break;
+        case GLUT_KEY_DOWN: // zooms out of the scene
+            scale -= 0.06f;
+            break;
+        case GLUT_KEY_LEFT: // rotates whole scene counter-clockwise
+            rotation += 5.0f;
+            break;
+        case GLUT_KEY_RIGHT: // rotates whole scene clockwise
+            rotation -= 5.0;
+            break;
    }
   glutPostRedisplay();
 }
